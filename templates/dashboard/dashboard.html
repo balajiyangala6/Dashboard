@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard — Balaji OS{% endblock %}
+
+{% block content %}
+
+<!-- ── Page Header ── -->
+<div class="page-header">
+  <div class="header-left">
+    <h1 class="page-greeting">{{ greeting }}, {{ profile.name }} {{ greeting_emoji }}</h1>
+    <p class="page-subtext">Stay consistent, keep learning, and make yourself proud.</p>
+  </div>
+  <div class="header-right">
+    <div class="motivational-quote-inline">
+      <p class="quote-small">Discipline today, Success tomorrow.</p>
+      <p class="quote-attr">— Your Future Self</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Stat Cards ── -->
+<div class="stat-cards">
+
+  <!-- Daily Progress -->
+  <div class="stat-card">
+    <div class="stat-card-top">
+      <span class="stat-label">Daily Progress</span>
+      <span class="stat-icon green">📈</span>
+    </div>
+    <div class="stat-value">{{ daily_progress }}%</div>
+    <div class="stat-subtitle">Keep going!</div>
+    <div class="mini-progress-bar">
+      <div class="mini-progress-fill green" style="width: {{ daily_progress }}%"></div>
+    </div>
+  </div>
+
+  <!-- Tasks Completed -->
+  <div class="stat-card">
+    <div class="stat-card-top">
+      <span class="stat-label">Tasks Completed</span>
+      <span class="stat-icon blue">✅</span>
+    </div>
+    <div class="stat-value">{{ completed_tasks }} <span class="stat-denom">/ {{ total_tasks }}</span></div>
+    <div class="stat-subtitle">This Month</div>
+  </div>
+
+  <!-- Study Hours -->
+  <div class="stat-card">
+    <div class="stat-card-top">
+      <span class="stat-label">Study Hours</span>
+      <span class="stat-icon purple">⏱️</span>
+    </div>
+    <div class="stat-value">{{ study_h }}h {{ study_m }}m</div>
+    <div class="stat-subtitle">Today</div>
+  </div>
+
+  <!-- Streak -->
+  <div class="stat-card">
+    <div class="stat-card-top">
+      <span class="stat-label">Streak</span>
+      <span class="stat-icon orange">🔥</span>
+    </div>
+    <div class="stat-value">{{ profile.streak_days }}</div>
+    <div class="stat-subtitle">Days</div>
+  </div>
+
+</div><!-- /stat-cards -->
+
+<!-- ── Middle Row ── -->
+<div class="grid-3col">
+
+  <!-- Roadmap Progress -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Roadmap Progress</h2>
+    </div>
+    <div class="roadmap-list">
+      {% for topic in roadmap_topics %}
+      <div class="roadmap-item">
+        <div class="roadmap-item-top">
+          <span class="roadmap-name">{{ topic.name }}</span>
+          <span class="roadmap-pct">{{ topic.progress }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{ topic.progress }}%; background: {% if topic.progress >= 80 %}#22c55e{% elif topic.progress >= 50 %}#a78bfa{% else %}#60a5fa{% endif %}"></div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="empty-state">No roadmap topics yet.</p>
+      {% endfor %}
+    </div>
+    <a href="{% url 'dashboard:roadmap' %}" class="card-link">View Full Roadmap →</a>
+  </div>
+
+  <!-- Today's Plan -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Today's Plan</h2>
+    </div>
+    <div class="task-list">
+      {% for task in today_tasks %}
+      <div class="task-item {% if task.is_completed %}completed{% endif %}" data-task-id="{{ task.id }}">
+        <button class="task-check-btn" onclick="toggleTask({{ task.id }}, this)" aria-label="Toggle task">
+          <span class="task-dot" style="background: {{ task.color }}"></span>
+        </button>
+        <div class="task-body">
+          <span class="task-title">{{ task.title }}</span>
+          {% if task.scheduled_time %}
+          <span class="task-time">{{ task.scheduled_time|time:"g:i A" }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p class="empty-state">No tasks planned for today.</p>
+      {% endfor %}
+    </div>
+    <a href="{% url 'dashboard:tasks' %}" class="card-link">View All Tasks →</a>
+  </div>
+
+  <!-- Study Hours Chart -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Study Hours <span class="card-title-sub">(This Week)</span></h2>
+    </div>
+    <div class="bar-chart">
+      {% for day in week_chart %}
+      <div class="bar-col">
+        <div class="bar-wrap">
+          <div class="bar {% if day.is_today %}bar-today{% endif %}"
+               style="height: {% widthratio day.hours max_week_hours 100 %}%"
+               title="{{ day.day }}: {{ day.hours }}h"></div>
+        </div>
+        <span class="bar-label {% if day.is_today %}bar-label-today{% endif %}">{{ day.day }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="chart-y-labels">
+      <span>8h</span><span>6h</span><span>4h</span><span>2h</span><span>0h</span>
+    </div>
+  </div>
+
+</div><!-- /grid-3col -->
+
+<!-- ── Bottom Row ── -->
+<div class="grid-3col">
+
+  <!-- Current Project -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Current Project</h2>
+    </div>
+    {% if current_project %}
+    <div class="project-card-inner">
+      <div class="project-icon-box">{{ current_project.icon }}</div>
+      <div class="project-info">
+        <h3 class="project-name">{{ current_project.name }}</h3>
+        <p class="project-desc">{{ current_project.description }}</p>
+        <p class="project-stack">{{ current_project.tech_stack }}</p>
+      </div>
+    </div>
+    <div class="project-progress-wrap">
+      <div class="project-progress-top">
+        <span class="project-progress-label">Progress</span>
+        <span class="project-progress-pct">{{ current_project.progress }}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill purple" style="width: {{ current_project.progress }}%"></div>
+      </div>
+    </div>
+    <a href="{% url 'dashboard:projects' %}" class="card-link">View Project →</a>
+    {% else %}
+    <p class="empty-state">No active project.</p>
+    {% endif %}
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Activity</h2>
+    </div>
+    <div class="activity-list">
+      {% for act in recent_activities %}
+      <div class="activity-item">
+        <span class="activity-icon" style="color: {{ act.color }}">{{ act.icon }}</span>
+        <div class="activity-body">
+          <span class="activity-desc">{{ act.description }}</span>
+          <span class="activity-time">{{ act.timestamp|timesince }} ago</span>
+        </div>
+      </div>
+      {% empty %}
+      <p class="empty-state">No recent activity.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Quick Links</h2>
+    </div>
+    <div class="quick-links-grid">
+      {% for link in quick_links %}
+      <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="quick-link-item" title="{{ link.name }}">
+        <span class="quick-link-icon" style="background: {{ link.bg_color }}">{{ link.icon }}</span>
+        <span class="quick-link-name">{{ link.name }}</span>
+      </a>
+      {% empty %}
+      <p class="empty-state">No links yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div><!-- /grid-3col (bottom) -->
+
+<!-- ── Daily Quote ── -->
+{% if quote %}
+<div class="daily-quote">
+  <span class="quote-bulb">💡</span>
+  <span class="quote-text">Daily Quote: <em>"{{ quote.text }}"</em></span>
+  {% if quote.author %}<span class="quote-author">— {{ quote.author }}</span>{% endif %}
+  <a href="#" class="edit-dashboard-link">✏️ Edit Dashboard</a>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Roadmap — Balaji OS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-greeting">🗺️ Roadmap</h1>
+  <p class="page-subtext">Track your learning journey topic by topic.</p>
+</div>
+<div class="card" style="max-width: 700px;">
+  <div class="roadmap-list roadmap-list-full">
+    {% for topic in topics %}
+    <div class="roadmap-item roadmap-item-lg">
+      <div class="roadmap-item-top">
+        <span class="roadmap-name">{{ topic.name }}</span>
+        <span class="roadmap-pct">{{ topic.progress }}%</span>
+      </div>
+      <div class="progress-bar progress-bar-lg">
+        <div class="progress-fill"
+          style="width: {{ topic.progress }}%;
+                 background: {% if topic.progress >= 80 %}#22c55e{% elif topic.progress >= 50 %}#a78bfa{% else %}#60a5fa{% endif %}">
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p class="empty-state">No roadmap topics yet. Add them in Admin.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

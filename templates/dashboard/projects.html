@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Projects — Balaji OS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-greeting">💼 Projects</h1>
+  <p class="page-subtext">Build. Ship. Grow.</p>
+</div>
+<div class="projects-grid">
+  {% for project in projects %}
+  <div class="card project-card-full {% if project.is_active %}project-active{% endif %}">
+    <div class="project-card-inner">
+      <div class="project-icon-box">{{ project.icon }}</div>
+      <div class="project-info">
+        <h3 class="project-name">{{ project.name }}</h3>
+        <p class="project-desc">{{ project.description }}</p>
+        <p class="project-stack">{{ project.tech_stack }}</p>
+      </div>
+    </div>
+    <div class="project-progress-wrap">
+      <div class="project-progress-top">
+        <span class="project-progress-label">Progress</span>
+        <span class="project-progress-pct">{{ project.progress }}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill purple" style="width: {{ project.progress }}%"></div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <p class="empty-state">No projects yet. Add them in Admin.</p>
+  {% endfor %}
+</div>
+{% endblock %}

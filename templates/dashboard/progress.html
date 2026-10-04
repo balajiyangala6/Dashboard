@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Progress — Balaji OS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-greeting">📈 Study Progress</h1>
+  <p class="page-subtext">Your last 30 study sessions.</p>
+</div>
+<div class="card" style="max-width:700px;">
+  <table class="data-table">
+    <thead>
+      <tr><th>Date</th><th>Hours</th></tr>
+    </thead>
+    <tbody>
+      {% for session in sessions %}
+      <tr>
+        <td>{{ session.date }}</td>
+        <td>{{ session.hours }}h</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="2" class="empty-state">No sessions recorded yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

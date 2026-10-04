@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Tasks — Balaji OS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-greeting">✅ Tasks</h1>
+  <p class="page-subtext">Stay on top of your daily plan.</p>
+</div>
+
+<div class="grid-2col">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Today's Tasks</h2>
+    </div>
+    <div class="task-list">
+      {% for task in today_tasks %}
+      <div class="task-item {% if task.is_completed %}completed{% endif %}" data-task-id="{{ task.id }}">
+        <button class="task-check-btn" onclick="toggleTask({{ task.id }}, this)" aria-label="Toggle task">
+          <span class="task-dot" style="background: {{ task.color }}"></span>
+        </button>
+        <div class="task-body">
+          <span class="task-title">{{ task.title }}</span>
+          {% if task.scheduled_time %}
+          <span class="task-time">{{ task.scheduled_time|time:"g:i A" }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p class="empty-state">No tasks for today.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">All Tasks</h2>
+    </div>
+    <div class="task-list">
+      {% for task in all_tasks %}
+      <div class="task-item {% if task.is_completed %}completed{% endif %}">
+        <span class="task-dot" style="background: {{ task.color }}"></span>
+        <div class="task-body">
+          <span class="task-title">{{ task.title }}</span>
+          <span class="task-time">{{ task.date }}</span>
+        </div>
+      </div>
+      {% empty %}
+      <p class="empty-state">No tasks yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>const CSRF_TOKEN = '{{ csrf_token }}';</script>
+{% endblock %}
