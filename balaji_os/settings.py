@@ -5,7 +5,9 @@ Supports local dev (SQLite) and Vercel production (Neon PostgreSQL).
 
 from pathlib import Path
 import os
+from urllib.parse import unquote, urlparse
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Load .env file for local development
 load_dotenv()
@@ -13,10 +15,13 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── Security ───────────────────────────────────────
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-&9yvmkze6h$%=bem=5pz306a#_1%lz##%#k&un!ynk!pmnjq+q'
-)
+IS_VERCEL = os.environ.get('VERCEL') == '1'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if IS_VERCEL:
+        raise ImproperlyConfigured('Set SECRET_KEY in the Vercel project environment variables.')
+    SECRET_KEY = 'django-insecure-local-development-only'
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
@@ -80,14 +85,21 @@ WSGI_APPLICATION = 'balaji_os.wsgi.application'
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 if DATABASE_URL:
-    import urllib.parse as urlparse
-    url = urlparse.urlparse(DATABASE_URL)
+    url = urlparse(DATABASE_URL)
+    if (
+        url.scheme not in ('postgres', 'postgresql')
+        or not url.hostname
+        or not url.username
+        or not url.path.strip('/')
+    ):
+        raise ImproperlyConfigured('DATABASE_URL must be a valid PostgreSQL connection URL.')
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME':     url.path[1:],
-            'USER':     url.username,
-            'PASSWORD': url.password,
+            'NAME':     unquote(url.path.lstrip('/')),
+            'USER':     unquote(url.username),
+            'PASSWORD': unquote(url.password or ''),
             'HOST':     url.hostname,
             'PORT':     url.port or 5432,
             'OPTIONS': {
@@ -96,6 +108,9 @@ if DATABASE_URL:
         }
     }
 else:
+    if IS_VERCEL:
+        raise ImproperlyConfigured('Set DATABASE_URL to your PostgreSQL connection URL in Vercel.')
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
