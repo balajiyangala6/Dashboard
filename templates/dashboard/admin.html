@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Admin — Balaji OS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-greeting">Admin Console</h1>
+  <p class="page-subtext">Manage learning content, accounts, and account activity.</p>
+</div>
+
+{% if error %}<p class="auth-error" role="alert">{{ error }}</p>{% endif %}
+{% if notice %}<p class="admin-notice" role="status">{{ notice }}</p>{% endif %}
+
+<div class="grid-2col admin-forms">
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Add roadmap topic</h2></div>
+    <form method="post" class="admin-form">
+      {% csrf_token %}<input type="hidden" name="action" value="add_roadmap">
+      <label>Name<input name="name" required maxlength="120"></label>
+      <label>Progress (%)<input name="progress" type="number" min="0" max="100" value="0" required></label>
+      <label>Display order<input name="order" type="number" min="0" value="{{ next_roadmap_order }}" required></label>
+      <button class="btn-primary" type="submit">Add topic</button>
+    </form>
+  </section>
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Add task</h2></div>
+    <form method="post" class="admin-form">
+      {% csrf_token %}<input type="hidden" name="action" value="add_task">
+      <label>Title<input name="title" required maxlength="200"></label>
+      <label>Date<input name="date" type="date" required></label>
+      <label>Scheduled time<input name="scheduled_time" type="time"></label>
+      <label>Priority
+        <select name="priority"><option>low</option><option selected>medium</option><option>high</option></select>
+      </label>
+      <button class="btn-primary" type="submit">Add task</button>
+    </form>
+  </section>
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Add project</h2></div>
+    <form method="post" class="admin-form">
+      {% csrf_token %}<input type="hidden" name="action" value="add_project">
+      <label>Name<input name="name" required maxlength="160"></label>
+      <label>Description<textarea name="description" rows="3"></textarea></label>
+      <label>Tech stack<input name="tech_stack" maxlength="200"></label>
+      <label>Progress (%)<input name="progress" type="number" min="0" max="100" value="0" required></label>
+      <button class="btn-primary" type="submit">Add project</button>
+    </form>
+  </section>
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Create account</h2></div>
+    <form method="post" class="admin-form">
+      {% csrf_token %}<input type="hidden" name="action" value="add_account">
+      <label>Username<input name="username" required maxlength="80" autocomplete="off"></label>
+      <label>Display name<input name="display_name" required maxlength="120"></label>
+      <label>Email<input name="email" type="email" maxlength="254"></label>
+      <label>Role<select name="role"><option value="user">User</option><option value="admin">Admin</option></select></label>
+      <label>Password<input name="password" type="password" minlength="12" required autocomplete="new-password"></label>
+      <label>Confirm password<input name="password_confirmation" type="password" minlength="12" required autocomplete="new-password"></label>
+      <button class="btn-primary" type="submit">Create account</button>
+    </form>
+  </section>
+</div>
+
+<section class="card admin-list">
+  <div class="card-header"><h2 class="card-title">Roadmap topics</h2></div>
+  <table class="data-table"><thead><tr><th>Topic</th><th>Progress</th><th></th></tr></thead><tbody>
+    {% for topic in topics %}<tr><td>{{ topic.name }}</td><td>{{ topic.progress }}%</td><td>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_record"><input type="hidden" name="collection" value="roadmap_topics"><input type="hidden" name="record_id" value="{{ topic.id }}"><button class="btn-danger" type="submit">Delete</button></form>
+    </td></tr>{% empty %}<tr><td colspan="3" class="empty-state">No roadmap topics.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+
+<section class="card admin-list">
+  <div class="card-header"><h2 class="card-title">Tasks</h2></div>
+  <table class="data-table"><thead><tr><th>Task</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>
+    {% for task in tasks %}<tr><td>{{ task.title }}</td><td>{{ task.date }}</td><td>{% if task.is_completed %}Complete{% else %}Open{% endif %}</td><td>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_record"><input type="hidden" name="collection" value="tasks"><input type="hidden" name="record_id" value="{{ task.id }}"><button class="btn-danger" type="submit">Delete</button></form>
+    </td></tr>{% empty %}<tr><td colspan="4" class="empty-state">No tasks.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+
+<section class="card admin-list">
+  <div class="card-header"><h2 class="card-title">Projects</h2></div>
+  <table class="data-table"><thead><tr><th>Project</th><th>Progress</th><th></th></tr></thead><tbody>
+    {% for project in projects %}<tr><td>{{ project.name }}</td><td>{{ project.progress }}%</td><td>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_record"><input type="hidden" name="collection" value="projects"><input type="hidden" name="record_id" value="{{ project.id }}"><button class="btn-danger" type="submit">Delete</button></form>
+    </td></tr>{% empty %}<tr><td colspan="3" class="empty-state">No projects.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+
+<section class="card admin-list">
+  <div class="card-header"><h2 class="card-title">Accounts</h2></div>
+  <table class="data-table"><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead><tbody>
+    {% for account in accounts %}<tr><td>{{ account.username }}</td><td>{{ account.display_name }}</td><td>{{ account.email }}</td><td>{{ account.role|title }}</td><td>{{ account.created_at }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty-state">No accounts found.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+
+<section class="card admin-list">
+  <div class="card-header"><h2 class="card-title">Recent account activity</h2></div>
+  <p class="card-subtitle">Tracks authenticated page requests and task changes. Form contents and passwords are never recorded.</p>
+  <table class="data-table"><thead><tr><th>Time</th><th>Account</th><th>Role</th><th>Action</th><th>Details</th><th>Status</th></tr></thead><tbody>
+    {% for event in activity %}<tr><td>{{ event.timestamp }}</td><td>{{ event.username }}</td><td>{{ event.role|title }}</td><td>{{ event.action }}</td><td>{{ event.details|default:event.path }}</td><td>{{ event.status }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="empty-state">No activity recorded yet.</td></tr>{% endfor %}
+  </tbody></table>
+    <div class="activity-pagination">
+      {% if activity_has_previous %}<a class="btn-primary" href="?activity_page={{ activity_page|add:'-1' }}">Previous</a>{% endif %}
+      <span>Page {{ activity_page }}</span>
+      {% if activity_has_next %}<a class="btn-primary" href="?activity_page={{ activity_page|add:'1' }}">Next</a>{% endif %}
+    </div>
+</section>
+{% endblock %}

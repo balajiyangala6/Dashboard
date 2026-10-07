@@ -1,29 +1,28 @@
 """
 Django settings for balaji_os project.
-Supports local dev (SQLite) and Vercel production (Neon PostgreSQL).
+Dashboard data is stored in MongoDB.
 """
 
 from pathlib import Path
 import os
-from urllib.parse import unquote, urlparse
+from urllib.parse import urlparse
 from dotenv import load_dotenv
-from django.core.exceptions import ImproperlyConfigured
-
-# Load .env file for local development
-load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ── Security ───────────────────────────────────────
-IS_VERCEL = os.environ.get('VERCEL') == '1'
+load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env.local', override=True)
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY:
-    if IS_VERCEL:
-        raise ImproperlyConfigured('Set SECRET_KEY in the Vercel project environment variables.')
-    SECRET_KEY = 'django-insecure-local-development-only'
+# ── Security ───────────────────────────────────────
+SECRET_KEY = os.environ.get('SECRET_KEY') or 'django-insecure-static-build-only'
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+MONGODB_URI = os.environ.get('MONGODB_URI', '')
+MONGODB_DATABASE = (
+    os.environ.get('MONGODB_DATABASE')
+    or urlparse(MONGODB_URI).path.lstrip('/').split('/')[0]
+    or 'balaji_os'
+)
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -39,11 +38,6 @@ if CUSTOM_DOMAIN:
 
 # ── Apps ───────────────────────────────────────────
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
     'django.contrib.staticfiles',
     'dashboard',
 ]
@@ -52,12 +46,10 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',   # serves static files
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'dashboard.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'balaji_os.urls'
@@ -70,61 +62,13 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.csrf',
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'balaji_os.wsgi.application'
-
-# ── Database ───────────────────────────────────────
-# Uses DATABASE_URL env var on Vercel (Neon PostgreSQL).
-# Falls back to SQLite for local development.
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
-
-if DATABASE_URL:
-    url = urlparse(DATABASE_URL)
-    if (
-        url.scheme not in ('postgres', 'postgresql')
-        or not url.hostname
-        or not url.username
-        or not url.path.strip('/')
-    ):
-        raise ImproperlyConfigured('DATABASE_URL must be a valid PostgreSQL connection URL.')
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME':     unquote(url.path.lstrip('/')),
-            'USER':     unquote(url.username),
-            'PASSWORD': unquote(url.password or ''),
-            'HOST':     url.hostname,
-            'PORT':     url.port or 5432,
-            'OPTIONS': {
-                'sslmode': 'require',   # Neon requires SSL
-            },
-        }
-    }
-else:
-    if IS_VERCEL:
-        raise ImproperlyConfigured('Set DATABASE_URL to your PostgreSQL connection URL in Vercel.')
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-
-# ── Password validation ────────────────────────────
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
 
 # ── Internationalisation ───────────────────────────
 LANGUAGE_CODE = 'en-us'
@@ -147,16 +91,11 @@ STORAGES = {
     },
 }
 
-# ── Default primary key ────────────────────────────
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 # ── Security headers (production only) ────────────
 if not DEBUG:
-    SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True

@@ -14,7 +14,7 @@
     <div class="task-list">
       {% for task in today_tasks %}
       <div class="task-item {% if task.is_completed %}completed{% endif %}" data-task-id="{{ task.id }}">
-        <button class="task-check-btn" onclick="toggleTask({{ task.id }}, this)" aria-label="Toggle task">
+        <button class="task-check-btn" onclick="toggleTask('{{ task.id }}', this)" aria-label="Toggle task">
           <span class="task-dot" style="background: {{ task.color }}"></span>
         </button>
         <div class="task-body">
@@ -48,6 +48,28 @@
       {% endfor %}
     </div>
   </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">📈 Study Progress</h2>
+    <span class="card-subtitle">Your last 30 study sessions</span>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Date</th><th>Hours</th></tr>
+    </thead>
+    <tbody>
+      {% for session in sessions %}
+      <tr>
+        <td>{{ session.date }}</td>
+        <td>{{ session.hours }}h</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="2" class="empty-state">No sessions recorded yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}
 {% block extra_js %}

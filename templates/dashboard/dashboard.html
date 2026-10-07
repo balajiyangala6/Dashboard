@@ -101,7 +101,7 @@
     <div class="task-list">
       {% for task in today_tasks %}
       <div class="task-item {% if task.is_completed %}completed{% endif %}" data-task-id="{{ task.id }}">
-        <button class="task-check-btn" onclick="toggleTask({{ task.id }}, this)" aria-label="Toggle task">
+        <button class="task-check-btn" onclick="toggleTask('{{ task.id }}', this)" aria-label="Toggle task">
           <span class="task-dot" style="background: {{ task.color }}"></span>
         </button>
         <div class="task-body">

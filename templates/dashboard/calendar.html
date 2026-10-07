@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Calendar — Balaji OS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-greeting">📅 Calendar</h1>
+    <p class="page-subtext">Choose a day to see its tasks.</p>
+  </div>
+</div>
+
+<div class="calendar-layout">
+  <section class="card calendar-panel" aria-label="Monthly calendar">
+    <div class="calendar-datebar">
+      <span>{{ selected_date|date:"l, j F" }}</span>
+      <a class="calendar-today-link"
+         href="{% url 'dashboard:calendar' %}?month={{ selected_date|date:'Y-m' }}&day={{ today|date:'Y-m-d' }}"
+         aria-label="Go to today">⌄</a>
+    </div>
+    <div class="calendar-toolbar">
+      <h2 class="calendar-month">{{ displayed_month|date:"F, Y" }}</h2>
+      <div class="calendar-month-nav">
+        <a class="calendar-nav" href="{% url 'dashboard:calendar' %}?month={{ previous_month|date:'Y-m' }}" aria-label="Previous month">▴</a>
+        <a class="calendar-nav" href="{% url 'dashboard:calendar' %}?month={{ next_month|date:'Y-m' }}" aria-label="Next month">▾</a>
+      </div>
+    </div>
+    <div class="calendar-grid calendar-weekdays" aria-hidden="true">
+      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+    </div>
+    <div class="calendar-grid calendar-days">
+      {% for week in weeks %}
+        {% for day in week %}
+          {% if day.in_month %}
+          <a class="calendar-day{% if day.is_selected %} selected{% endif %}{% if day.is_today %} today{% endif %}"
+             href="{% url 'dashboard:calendar' %}?month={{ displayed_month|date:'Y-m' }}&day={{ day.date|date:'Y-m-d' }}"
+             aria-label="{{ day.date|date:'F j, Y' }}{% if day.task_count %}, {{ day.task_count }} tasks{% endif %}"
+             {% if day.is_selected %}aria-current="date"{% endif %}>
+            <span>{{ day.day }}</span>
+            {% if day.task_count %}<span class="calendar-task-dot" aria-hidden="true"></span>{% endif %}
+          </a>
+          {% else %}
+          <span class="calendar-day outside-month" aria-hidden="true">{{ day.day }}</span>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+    <p class="calendar-hint"><span class="calendar-task-dot" aria-hidden="true"></span> Has tasks</p>
+  </section>
+
+  <section class="card calendar-tasks-panel" aria-label="Tasks for selected day">
+    <div class="card-header calendar-tasks-heading">
+      <div>
+        <h2 class="card-title">Tasks</h2>
+        <p class="page-subtext">{{ selected_date|date:"l, F j" }}</p>
+      </div>
+      <span class="calendar-task-count">{{ month_tasks|length }}</span>
+    </div>
+    <div class="task-list">
+      {% for task in month_tasks %}
+      <div class="task-item{% if task.is_completed %} completed{% endif %}" data-task-id="{{ task.id }}">
+        <button class="task-check-btn" onclick="toggleTask('{{ task.id }}', this)" aria-label="Toggle task">
+          <span class="task-dot" style="background: {{ task.color }}"></span>
+        </button>
+        <div class="task-body">
+          <span class="task-title">{{ task.title }}</span>
+          {% if task.scheduled_time %}
+          <span class="task-time">{{ task.scheduled_time|time:"g:i A" }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p class="empty-state">No tasks scheduled for this day.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>const CSRF_TOKEN = '{{ csrf_token }}';</script>
+{% endblock %}

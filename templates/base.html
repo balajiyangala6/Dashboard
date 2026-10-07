@@ -35,29 +35,18 @@
         <a href="{% url 'dashboard:projects' %}" class="nav-item {% if active_page == 'projects' %}active{% endif %}">
           <span class="nav-icon">💼</span><span class="nav-label">Projects</span>
         </a>
-        <a href="#" class="nav-item">
-          <span class="nav-icon">📝</span><span class="nav-label">Notes</span>
-        </a>
-        <a href="#" class="nav-item">
-          <span class="nav-icon">💻</span><span class="nav-label">Practice</span>
-        </a>
-        <a href="{% url 'dashboard:progress' %}" class="nav-item {% if active_page == 'progress' %}active{% endif %}">
-          <span class="nav-icon">📈</span><span class="nav-label">Progress</span>
-        </a>
-        <a href="#" class="nav-item">
+        <a href="{% url 'dashboard:calendar' %}" class="nav-item {% if active_page == 'calendar' %}active{% endif %}">
           <span class="nav-icon">📅</span><span class="nav-label">Calendar</span>
         </a>
-
-        <p class="nav-section-label">RESOURCES</p>
-        <a href="#" class="nav-item"><span class="nav-icon">📚</span><span class="nav-label">Books</span></a>
-        <a href="#" class="nav-item"><span class="nav-icon">🔗</span><span class="nav-label">Links</span></a>
-        <a href="#" class="nav-item"><span class="nav-icon">🎓</span><span class="nav-label">Courses</span></a>
-        <a href="#" class="nav-item"><span class="nav-icon">🎬</span><span class="nav-label">Videos</span></a>
+        {% if request.account.role == 'admin' %}
+        <a href="{% url 'dashboard:admin' %}" class="nav-item {% if active_page == 'admin' %}active{% endif %}">
+          <span class="nav-icon">🛡️</span><span class="nav-label">Admin</span>
+        </a>
+        {% endif %}
 
         <p class="nav-section-label">ACCOUNT</p>
         <a href="#" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></a>
         <a href="#" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
-        <a href="/admin/" class="nav-item"><span class="nav-icon">🔓</span><span class="nav-label">Admin</span></a>
       </nav>
 
       <!-- Focus mode toggle -->
@@ -79,7 +68,15 @@
         <div class="topbar-right">
           <button class="topbar-icon-btn" title="Search">🔍</button>
           <button class="topbar-icon-btn" title="Notifications">🔔</button>
-          <div class="topbar-avatar">B</div>
+          {% if request.account %}
+          <div class="topbar-avatar">{{ request.account.display_name|first|upper }}</div>
+          <form method="post" action="{% url 'dashboard:logout' %}" class="logout-form">
+            {% csrf_token %}
+            <button class="topbar-icon-btn" type="submit" title="Sign out">Sign out</button>
+          </form>
+          {% else %}
+          <a class="topbar-icon-btn" href="{% url 'dashboard:login' %}">Sign in</a>
+          {% endif %}
         </div>
       </header>
 
