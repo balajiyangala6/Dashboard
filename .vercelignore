@@ -1,0 +1,9 @@
+# Don't upload these to Vercel
+db.sqlite3
+*.deb
+*.tar.gz
+*.zip
+__pycache__/
+*.pyc
+.env
+.git/
