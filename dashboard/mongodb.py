@@ -1,7 +1,6 @@
 from datetime import date, datetime, time, timezone
 from threading import Lock
 from types import SimpleNamespace
-import certifi
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -26,21 +25,11 @@ def get_collection(name):
     if _client is None:
         with _client_lock:
             if _client is None:
-                # Connection options for MongoDB Atlas with SSL/TLS
-                connection_options = {
-                    'serverSelectionTimeoutMS': 10000,
-                    'tz_aware': True,
-                }
-                
-                # Only use tlsCAFile on non-Vercel environments
-                # Vercel has SSL issues with explicit cert files
-                import os
-                if os.environ.get('VERCEL') != '1':
-                    connection_options['tlsCAFile'] = certifi.where()
-                
+                # Simple connection - let the URI parameters handle TLS
                 _client = MongoClient(
                     settings.MONGODB_URI,
-                    **connection_options
+                    serverSelectionTimeoutMS=10000,
+                    tz_aware=True,
                 )
 
     return _client[settings.MONGODB_DATABASE][name]

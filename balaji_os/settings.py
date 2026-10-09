@@ -29,12 +29,24 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.vercel.app',          # all *.vercel.app subdomains
     '.now.sh',
+    '.railway.app',         # Railway domains
+    '.onrender.com',        # Render domains
 ]
 
 # Allow custom domain if set
 CUSTOM_DOMAIN = os.environ.get('CUSTOM_DOMAIN', '')
 if CUSTOM_DOMAIN:
     ALLOWED_HOSTS.append(CUSTOM_DOMAIN)
+
+# Railway provides PUBLIC_DOMAIN
+RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
+if RAILWAY_PUBLIC_DOMAIN:
+    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+
+# Render provides RENDER_EXTERNAL_HOSTNAME
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # ── Apps ───────────────────────────────────────────
 INSTALLED_APPS = [
