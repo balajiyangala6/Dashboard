@@ -6,18 +6,29 @@ Dashboard data is stored in MongoDB.
 from pathlib import Path
 import os
 from urllib.parse import urlparse
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / '.env')
-load_dotenv(BASE_DIR / '.env.local', override=True)
+# Only load .env files in development (not on Render or production)
+if not os.environ.get('RENDER'):
+    load_dotenv(BASE_DIR / '.env')
+    load_dotenv(BASE_DIR / '.env.local', override=True)
 
 # ── Security ───────────────────────────────────────
 SECRET_KEY = os.environ.get('SECRET_KEY') or 'django-insecure-static-build-only'
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+# MongoDB Configuration
 MONGODB_URI = os.environ.get('MONGODB_URI', '')
+if not MONGODB_URI:
+    raise ImproperlyConfigured(
+        'MONGODB_URI environment variable is required. '
+        'Set it to your MongoDB Atlas connection string.'
+    )
+
 MONGODB_DATABASE = (
     os.environ.get('MONGODB_DATABASE')
     or urlparse(MONGODB_URI).path.lstrip('/').split('/')[0]
